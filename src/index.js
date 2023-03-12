@@ -1,5 +1,6 @@
 import Notiflix from 'notiflix';
-
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 import { fetchPhotos } from './js/fetchPhotos';
 
 const refs = {
@@ -9,14 +10,18 @@ const refs = {
   loadMoreBtn: document.querySelector('.load-more'),
 };
 
+let searchQuery = '';
 let page = 1;
 let cardsOnPage = 0;
 
 const renderMarkup = function (photos) {
   let markup = photos
     .map(photo => {
-      return `<div class="photo-card">
+      return `
+      <a class="photo-link gallery__item" href="${photo.largeImageURL}">
+        <div class="photo-card">
         <img
+        class="gallery__image"
           src="${photo.webformatURL}"
           alt="${photo.tags}"
           loading="lazy"
@@ -39,11 +44,14 @@ const renderMarkup = function (photos) {
             ${photo.downloads}
           </p>
         </div>
-      </div>`;
+      </div>
+      </a>`;
     })
     .join('');
 
   refs.gallery.insertAdjacentHTML('beforeend', markup);
+
+  lightbox.refresh();
 };
 
 const clearGallery = () => {
@@ -53,7 +61,9 @@ const clearGallery = () => {
 const loadGalleryItems = function (evt) {
   evt.preventDefault();
 
-  let searchQuery = refs.searchInput.value;
+  refs.loadMoreBtn.classList.add('visually-hidden');
+
+  searchQuery = refs.searchInput.value.trim();
 
   page = 1;
 
@@ -67,11 +77,17 @@ const loadGalleryItems = function (evt) {
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
-      } else {
+      } else if (photos.totalHits > 40) {
         renderMarkup(photos.hits);
         refs.loadMoreBtn.classList.remove('visually-hidden');
 
         cardsOnPage = document.querySelectorAll('.photo-card').length;
+
+        Notiflix.Notify.success(`Hooray! We found ${photos.totalHits} images.`);
+      } else {
+        renderMarkup(photos.hits);
+
+        Notiflix.Notify.success(`Hooray! We found ${photos.totalHits} images.`);
       }
     })
     .catch(error => console.log(error));
@@ -80,7 +96,7 @@ const loadGalleryItems = function (evt) {
 const loadMoreGalleryItems = function () {
   page += 1;
 
-  let searchQuery = refs.searchInput.value;
+  searchQuery = refs.searchInput.value;
 
   cardsOnPage += document.querySelectorAll('.photo-card').length;
 
@@ -100,3 +116,10 @@ const loadMoreGalleryItems = function () {
 
 refs.searchBtn.addEventListener('click', loadGalleryItems);
 refs.loadMoreBtn.addEventListener('click', loadMoreGalleryItems);
+
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
+  close: false,
+  showCounter: false,
+});
