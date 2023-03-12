@@ -18,10 +18,9 @@ const renderMarkup = function (photos) {
   let markup = photos
     .map(photo => {
       return `
-      <a class="photo-link gallery__item" href="${photo.largeImageURL}">
+      <a class="photo-link" href="${photo.largeImageURL}">
         <div class="photo-card">
         <img
-        class="gallery__image"
           src="${photo.webformatURL}"
           alt="${photo.tags}"
           loading="lazy"
